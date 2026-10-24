@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BROTHER AI</title>
+  <style>
+    * {box-sizing:border-box} body{margin:0;background:#0b1020;color:#eef2ff;font-family:system-ui,Segoe UI,sans-serif}
+    main{max-width:850px;margin:30px auto;padding:20px} header{display:flex;align-items:center;justify-content:space-between;gap:16px}
+    h1{margin:0;font-size:28px} .sub{color:#aab4cc;margin-top:6px} .panel{background:#151d31;border:1px solid #2b3753;border-radius:16px;padding:18px;margin-top:22px}
+    #chat{height:55vh;min-height:300px;overflow:auto;display:flex;flex-direction:column;gap:12px}
+    .msg{padding:12px 15px;border-radius:12px;max-width:85%;white-space:pre-wrap;overflow-wrap:anywhere}
+    .user{background:#2857a5;align-self:flex-end}.assistant{background:#263149;align-self:flex-start}
+    form{display:flex;gap:10px;margin-top:16px} input{background:#0b1020;color:white;border:1px solid #465475;border-radius:9px;padding:12px;font:inherit;min-width:0}
+    #message{flex:1} button{background:#5a8cff;color:white;border:0;border-radius:9px;padding:11px 16px;cursor:pointer;font-weight:600}
+    #name{width:160px} #status{color:#aab4cc;font-size:13px;margin-top:10px}
+    @media(max-width:560px){header{flex-direction:column;align-items:stretch}#name{width:100%}}
+  </style>
+</head>
+<body><main>
+  <header><div><h1 id="title">BROTHER AI</h1><div class="sub">Private • Local-first • No paid API</div></div>
+    <div><input id="name" aria-label="Assistant name" maxlength="40"><button id="saveName">Save name</button></div>
+  </header>
+  <section class="panel"><div id="chat" aria-live="polite"></div>
+    <form id="form"><input id="message" autocomplete="off" maxlength="5000" placeholder="BROTHER se baat karo..." required><button type="submit">Send</button></form>
+    <div id="status">Conversation locally saved in SQLite.</div>
+  </section>
+</main>
+<script>
+const chat=document.getElementById('chat'), input=document.getElementById('message'), status=document.getElementById('status');
+function add(role,content){const el=document.createElement('div');el.className='msg '+(role==='user'?'user':'assistant');el.textContent=content;chat.appendChild(el);chat.scrollTop=chat.scrollHeight;}
+async function load(){try{const [settings,history]=await Promise.all([fetch('/api/settings').then(r=>r.json()),fetch('/api/history').then(r=>r.json())]);document.getElementById('name').value=settings.name;document.getElementById('title').textContent=settings.name+' AI';history.forEach(m=>add(m.role,m.content));}catch(e){status.textContent='Backend connection failed: '+e.message;}}
+document.getElementById('form').addEventListener('submit',async e=>{e.preventDefault();const message=input.value.trim();if(!message)return;input.value='';add('user',message);status.textContent='Thinking...';try{const r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message})});if(!r.ok)throw Error('Server error '+r.status);const data=await r.json();add('assistant',data.reply);status.textContent='Saved locally.';}catch(err){add('assistant','Error: '+err.message);status.textContent='Message may not have been saved.';}});
+document.getElementById('saveName').addEventListener('click',async()=>{const name=document.getElementById('name').value.trim();if(!name)return;try{const r=await fetch('/api/settings',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({name})});if(!r.ok)throw Error('Could not save name');document.getElementById('title').textContent=name+' AI';status.textContent='Name saved.';}catch(e){status.textContent=e.message;}});
+load();
+</script></body></html>

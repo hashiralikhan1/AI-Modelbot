@@ -1,0 +1,38 @@
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Local data
+data/
+*.db
+*.db-shm
+*.db-wal
+
+# AI models and engines
+models/
+engines/
+*.gguf
+*.safetensors
+
+# Generated reports
+reports/
+screenshots/
+
+# Frontend
+node_modules/
+frontend/dist/
+
+# Editor and OS
+.vscode/
+.DS_Store
+Thumbs.db
